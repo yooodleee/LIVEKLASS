@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /c/Users/dhals_zn0ga5j/python_seed/LIVEKLASS && npx tsc --noEmit 2>&1 | head -20"
+          }
+        ]
+      }
+    ]
+  }
+}
