@@ -1,26 +1,30 @@
 # LIVEKLASS — 다단계 수강 신청 서비스
 
-## 기술 스택 선택 이유
+## 프로젝트 개요
 
-### TanStack Query v5
+온라인 교육 플랫폼의 강의 수강 신청 흐름을 다단계 폼으로 구현한 프로젝트입니다.
 
-서버 상태(강좌 목록, 수강 신청 결과)와 클라이언트 UI 상태를 명확히 분리하기 위해 선택했습니다. 캐싱·자동 재검증·로딩/에러 상태 처리가 내장되어 있어 비동기 데이터 흐름을 선언적으로 관리할 수 있습니다.
-
-### React Hook Form + Zod
-
-다단계 폼에서 단계별 유효성 검증이 필요하므로, 비제어 컴포넌트 기반으로 리렌더링을 최소화하는 React Hook Form을 선택했습니다. Zod는 스키마 기반으로 런타임 타입 안전성을 제공하며, `@hookform/resolvers`로 두 라이브러리를 자연스럽게 연결합니다.
-
-### MSW v2 (Mock Service Worker)
-
-브라우저 Service Worker 레벨에서 네트워크 요청을 인터셉트하므로, 실제 HTTP 요청 흐름을 그대로 유지하면서 백엔드 없이 개발할 수 있습니다. `fetch`/`axios` 등 HTTP 클라이언트에 무관하게 동작합니다.
-
-### Tailwind CSS v4
-
-유틸리티 퍼스트 방식으로 빠른 스타일링이 가능하며, 별도 UI 라이브러리 없이 접근성(a11y)을 고려한 커스텀 컴포넌트를 직접 구성합니다. 추후 shadcn/ui 연동을 고려한 구조입니다.
+- **서비스명**: LIVEKLASS
+- **목적**: 수강생이 강의를 선택하고 신청 정보를 입력하여 수강 신청을 완료하는 3단계 폼 구현
+- **신청 유형**: 개인 신청(INDIVIDUAL) / 단체 신청(GROUP) — 유형별 조건부 필드 분기
 
 ---
 
-## 로컬 실행 방법
+## 기술 스택
+
+| 분류 | 라이브러리 | 버전 |
+| ---- | ---------- | ---- |
+| 프레임워크 | Next.js (App Router) | 16.x |
+| 폼 상태 관리 | React Hook Form | 7.x |
+| 스키마 유효성 검증 | Zod | 4.x |
+| 서버 상태 관리 | TanStack Query | 5.x |
+| Mock API | MSW (Mock Service Worker) | 2.x |
+| 스타일 | Tailwind CSS | 4.x |
+| 언어 | TypeScript | 5.x |
+
+---
+
+## 실행 방법
 
 ```bash
 git clone https://github.com/yooodleee/LIVEKLASS.git
@@ -32,25 +36,29 @@ npm run dev
 
 브라우저에서 `http://localhost:3001` 접속
 
+### 주요 스크립트
+
+```bash
+npm run dev        # 개발 서버 실행 (포트 3001)
+npm run build      # 프로덕션 빌드
+npm run type-check # TypeScript 타입 검사
+npm run lint       # ESLint 검사
+npm run format     # Prettier 포맷
+```
+
+### 환경 변수
+
+`.env.example`을 참고하여 `.env.local`을 설정합니다.
+
+```bash
+NEXT_PUBLIC_APP_URL=http://localhost:3001
+NEXT_PUBLIC_API_MOCKING=enabled
+SLACK_WEBHOOK_URL=  # Slack Incoming Webhook URL
+```
+
 ---
 
-## Mock API 구성 방식 및 엔드포인트 목록
-
-MSW v2 Service Worker(`public/mockServiceWorker.js`)가 브라우저에서 네트워크 요청을 인터셉트합니다.
-개발 서버 시작 시 콘솔에 `[MSW] Mocking enabled.` 메시지가 표시됩니다.
-
-| 메서드 | 엔드포인트                       | 설명                |
-| ------ | -------------------------------- | ------------------- |
-| `GET`  | `/api/courses`                   | 전체 강좌 목록 조회 |
-| `GET`  | `/api/courses/:courseId`         | 단일 강좌 상세 조회 |
-| `POST` | `/api/enrollments`               | 수강 신청 제출      |
-| `GET`  | `/api/enrollments/:enrollmentId` | 수강 신청 내역 조회 |
-
-핸들러 파일: `src/mocks/handlers/course.ts`, `src/mocks/handlers/enrollment.ts`
-
----
-
-## 폴더 구조
+## 프로젝트 구조 설명
 
 ```
 src/
@@ -61,11 +69,14 @@ src/
 │   ├── Providers.tsx           # TanStack Query Provider
 │   └── MSWProvider.tsx         # MSW 초기화 Provider
 ├── features/
-│   └── enrollment/             # 수강 신청 도메인
-│       ├── components/         # 수강 신청 폼 컴포넌트
-│       ├── hooks/              # useCourses, useEnrollment 훅
-│       ├── schema/             # Zod 스키마 (enrollmentSchema)
-│       └── types/              # 도메인 타입 정의
+│   └── enrollment/             # 수강 신청 도메인 (Feature Slice)
+│       ├── components/
+│       │   ├── steps/          # StepOne, StepTwo, StepThree
+│       │   └── fields/         # 조건부 필드 컴포넌트
+│       ├── hooks/              # useEnrollmentForm, useStepNavigation
+│       ├── schema/             # stepOneSchema, stepTwoSchema, stepThreeSchema
+│       ├── types/              # EnrollmentFormValues, Course 등
+│       └── constants/          # ENROLLMENT_STEPS, STEP_LABELS
 ├── lib/
 │   └── query-client.ts         # QueryClient 싱글턴 팩토리
 ├── mocks/                      # MSW 핸들러
@@ -75,25 +86,54 @@ src/
 │       ├── course.ts           # 강좌 관련 핸들러
 │       ├── enrollment.ts       # 수강 신청 핸들러
 │       └── index.ts            # 핸들러 통합
-└── types/                      # 공통 타입 정의
+└── types/
+    └── enrollment.ts           # 도메인 핵심 타입 정의
 ```
+
+### Mock API 엔드포인트
+
+MSW v2 Service Worker(`public/mockServiceWorker.js`)가 브라우저에서 네트워크 요청을 인터셉트합니다.
+
+| 메서드 | 엔드포인트 | 설명 | 지연 |
+| ------ | ---------- | ---- | ---- |
+| `GET` | `/api/courses` | 강의 목록 조회 | 800ms |
+| `GET` | `/api/courses/:id` | 강의 상세 조회 | 800ms |
+| `POST` | `/api/enrollments` | 수강 신청 제출 | 1200ms |
 
 ---
 
-## 주요 구현 결정 사항 (Architecture Decision)
+## 요구사항 해석 및 가정
 
-### 1. QueryClient 싱글턴 전략
+<!-- 과제 요구사항 중 명확하지 않은 부분을 어떻게 해석했는지 기술 -->
+
+---
+
+## 설계 결정과 이유
+
+### React Hook Form + useFormContext — 스텝 간 상태 공유
+
+다단계 폼에서 스텝 이동 시 이전 입력값을 유지하기 위해 루트에서 `useForm`을 선언하고 `FormProvider`로 각 스텝 컴포넌트에 공유합니다. `useState`로 전체 폼 상태를 직접 관리하는 방식은 리렌더링 비용과 상태 초기화 위험이 있어 배제했습니다.
+
+### Zod 스키마 스텝별 분리
+
+각 스텝에서 필요한 필드만 검증하도록 `stepOneSchema`, `stepTwoSchema`, `stepThreeSchema`를 분리합니다. 스텝 이동 시 해당 스텝의 스키마만 `resolver`로 주입하여 불필요한 검증을 방지합니다.
+
+### QueryClient 싱글턴 전략
 
 Next.js App Router에서 서버/클라이언트 컴포넌트가 혼재합니다. `lib/query-client.ts`에서 서버사이드는 요청마다 새 인스턴스를 생성하고, 클라이언트사이드는 모듈 스코프 변수로 싱글턴을 유지합니다.
 
-### 2. MSW 지연 초기화 (Lazy Init)
+### MSW 지연 초기화 (Lazy Init)
 
-`MSWProvider`는 클라이언트 컴포넌트로, `useEffect`에서 MSW를 동적 import하여 초기화합니다. Service Worker 등록 완료 전까지 자식 컴포넌트를 렌더링하지 않아 MSW가 준비되기 전 API 요청이 나가는 경합 조건(race condition)을 방지합니다.
+`MSWProvider`는 클라이언트 컴포넌트로, `useEffect`에서 MSW를 동적 import하여 초기화합니다. Service Worker 등록 완료 전까지 자식 컴포넌트를 렌더링하지 않아 MSW 준비 전 API 요청이 나가는 경합 조건(race condition)을 방지합니다.
 
-### 3. 도메인 중심 폴더 구조 (Feature Slice)
+---
 
-`features/enrollment/` 하위에 컴포넌트·훅·스키마·타입을 함께 배치하여 관심사를 도메인 단위로 응집합니다. 기능이 추가될 때 `features/` 하위에 새 슬라이스를 추가하는 방식으로 확장합니다.
+## 미구현 / 제약사항
 
-### 4. Zod 스키마 단일 소스
+<!-- 시간 또는 범위 제약으로 구현하지 못한 항목, 알려진 제약사항 기술 -->
 
-폼 유효성 검증과 TypeScript 타입(`z.infer<>`)을 동일한 Zod 스키마에서 파생시켜 런타임 검증과 컴파일 타임 타입이 항상 일치하도록 합니다.
+---
+
+## AI 활용 범위
+
+<!-- Claude Code를 활용한 작업 범위와 직접 작성한 코드의 범위를 구분하여 기술 -->
