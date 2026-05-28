@@ -1,29 +1,34 @@
-export interface Course {
-  id: string;
-  title: string;
-  instructor: string;
-  category: string;
-  schedule: string;
-  maxStudents: number;
-  currentStudents: number;
-  price: number;
-  description: string;
-}
-
-export interface CourseListResponse {
-  courses: Course[];
-}
+export type {
+  Course,
+  CourseCategory,
+  CourseListResponse,
+  CourseStatus,
+  EnrollmentFormValues,
+  EnrollmentType,
+  GroupFields,
+  IndividualFields,
+  Step,
+} from '@/types/enrollment'
 
 export interface EnrollmentRequest {
-  courseId: string;
-  studentName: string;
-  email: string;
-  phone: string;
-  paymentMethod: 'card' | 'transfer' | 'virtual';
+  courseId: string
+  enrollmentType: 'INDIVIDUAL' | 'GROUP'
+  individual?: {
+    name: string
+    email: string
+    phone: string
+  }
+  group?: {
+    organizationName: string
+    managerName: string
+    managerEmail: string
+    managerPhone: string
+    headCount: number
+  }
 }
 
 export interface EnrollmentResponse {
-  enrollmentId: string;
-  message: string;
-  createdAt: string;
+  enrollmentId: string
+  message: string
+  createdAt: string
 }

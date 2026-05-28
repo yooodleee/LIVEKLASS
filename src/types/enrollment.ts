@@ -1,14 +1,23 @@
 export type EnrollmentType = 'INDIVIDUAL' | 'GROUP'
 export type Step = 1 | 2 | 3
-export type CourseStatus = 'OPEN' | 'CLOSED' | 'FULL'
+export type CourseStatus = 'OPEN' | 'ALMOST_FULL' | 'FULL'
+export type CourseCategory = 'development' | 'design' | 'marketing' | 'business'
 
 export interface Course {
   id: string
   title: string
   instructor: string
-  status: CourseStatus
+  category: CourseCategory
+  description: string
+  schedule: string
+  price: number
   maxCapacity: number
-  currentCount: number
+  currentEnrollment: number
+}
+
+export interface CourseListResponse {
+  courses: Course[]
+  total: number
 }
 
 export interface IndividualFields {
