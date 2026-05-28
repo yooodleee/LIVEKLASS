@@ -8,51 +8,53 @@ const STEPS: { step: Step; label: string }[] = [
 
 interface StepIndicatorProps {
   currentStep: Step
+  isPending?: boolean
+  onCompletedStepClick?: (step: Step) => void
 }
 
-export default function StepIndicator({ currentStep }: StepIndicatorProps) {
+export default function StepIndicator({
+  currentStep,
+  isPending = false,
+  onCompletedStepClick,
+}: StepIndicatorProps) {
   return (
     <ol className="flex items-center justify-center gap-0">
       {STEPS.map(({ step, label }, index) => {
         const isCompleted = step < currentStep
         const isActive = step === currentStep
+        const isClickable = isCompleted && !isPending && !!onCompletedStepClick
 
         return (
           <li key={step} className="flex items-center">
             <div className="flex flex-col items-center gap-1.5">
-              <div
-                className={[
-                  'flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-colors',
-                  isCompleted
-                    ? 'bg-blue-600 text-white'
-                    : isActive
-                      ? 'bg-blue-600 text-white ring-4 ring-blue-100'
-                      : 'bg-gray-100 text-gray-400',
-                ].join(' ')}
-                aria-current={isActive ? 'step' : undefined}
-              >
-                {isCompleted ? (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                ) : (
-                  step
-                )}
-              </div>
+              {isClickable ? (
+                <button
+                  type="button"
+                  onClick={() => onCompletedStepClick(step)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white transition-colors hover:bg-blue-700"
+                  aria-label={`${label} 단계로 이동`}
+                >
+                  <CheckIcon />
+                </button>
+              ) : (
+                <div
+                  className={[
+                    'flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-colors',
+                    isCompleted
+                      ? 'bg-blue-600 text-white'
+                      : isActive
+                        ? 'bg-blue-600 text-white ring-4 ring-blue-100'
+                        : 'bg-gray-100 text-gray-400',
+                  ].join(' ')}
+                  aria-current={isActive ? 'step' : undefined}
+                >
+                  {isCompleted ? <CheckIcon /> : step}
+                </div>
+              )}
               <span
                 className={[
                   'text-xs font-medium',
-                  isActive ? 'text-blue-600' : isCompleted ? 'text-blue-600' : 'text-gray-400',
+                  isActive || isCompleted ? 'text-blue-600' : 'text-gray-400',
                 ].join(' ')}
               >
                 {label}
@@ -71,5 +73,23 @@ export default function StepIndicator({ currentStep }: StepIndicatorProps) {
         )
       })}
     </ol>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-4 w-4"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        fillRule="evenodd"
+        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+        clipRule="evenodd"
+      />
+    </svg>
   )
 }
