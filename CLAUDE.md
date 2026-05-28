@@ -103,3 +103,10 @@ POST /api/enrollments    # 수강 신청 제출
 - --max-warnings 0 설정으로 경고도 오류로 처리된다
 - react-hooks/exhaustive-deps 위반은 useEffect 의존성 배열을 반드시 수정한다
 - import 순서 오류는 eslint --fix 로 자동 수정 후 재확인한다
+
+## git push 게이트
+- git push 실행 전 tsc --noEmit → eslint src/ 가 순서대로 자동 실행된다
+- 둘 중 하나라도 오류가 있으면 push가 차단된다
+- push가 차단되면 오류를 모두 수정한 뒤 다시 push를 시도한다
+- push 게이트는 PostToolUse 훅의 즉시 피드백과 별개로 동작하는 최종 안전망이다
+- 게이트를 우회하는 --no-verify 옵션은 사용하지 않는다
