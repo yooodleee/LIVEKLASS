@@ -16,7 +16,9 @@
       "Read(//c/ProgramData/chocolatey/bin/**)",
       "Bash(cmd.exe /c \"where gh\")",
       "Bash(npx eslint:*)",
-      "Bash(cmd.exe:*)"
+      "Bash(cmd.exe:*)",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/eslint-plugin-import/package.json'\\).version\\)\")",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/eslint-plugin-react-hooks/package.json'\\).version\\)\")"
     ]
   }
 }

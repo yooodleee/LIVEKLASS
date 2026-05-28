@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+
 import type { CourseListResponse } from '../types';
 
 async function fetchCourses(): Promise<CourseListResponse> {

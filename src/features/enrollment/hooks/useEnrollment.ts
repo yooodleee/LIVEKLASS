@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
+
 import type { EnrollmentRequest, EnrollmentResponse } from '../types';
 
 async function submitEnrollment(data: EnrollmentRequest): Promise<EnrollmentResponse> {

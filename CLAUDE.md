@@ -96,3 +96,10 @@ POST /api/enrollments    # 수강 신청 제출
 - 타입 오류가 출력되면 다음 작업으로 넘어가기 전에 즉시 수정한다
 - 오류 수정 없이 다음 스텝을 진행하지 않는다
 - any 타입은 tsconfig noImplicitAny 설정으로 컴파일 오류 처리된다
+
+## 자동 ESLint 체크 훅
+- Write / Edit 실행 직후 tsc → eslint 순으로 자동 실행된다
+- 린트 오류가 출력되면 다음 작업으로 넘어가기 전에 즉시 수정한다
+- --max-warnings 0 설정으로 경고도 오류로 처리된다
+- react-hooks/exhaustive-deps 위반은 useEffect 의존성 배열을 반드시 수정한다
+- import 순서 오류는 eslint --fix 로 자동 수정 후 재확인한다
