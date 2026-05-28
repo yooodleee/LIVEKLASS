@@ -23,11 +23,14 @@
 ## 로컬 실행 방법
 
 ```bash
+git clone https://github.com/yooodleee/LIVEKLASS.git
+cd LIVEKLASS
+cp .env.example .env.local
 npm install
 npm run dev
 ```
 
-브라우저에서 `http://localhost:3000` 접속
+브라우저에서 `http://localhost:3001` 접속
 
 ---
 

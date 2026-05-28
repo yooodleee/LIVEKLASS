@@ -9,7 +9,14 @@
       "Bash(npx tsc:*)",
       "Bash(npm run:*)",
       "Bash(python:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(gh auth:*)",
+      "Read(//c/Users/LEGION/scoop/**)",
+      "Read(//c/Users/dhals_zn0ga5j/scoop/**)",
+      "Read(//c/ProgramData/chocolatey/bin/**)",
+      "Bash(cmd.exe /c \"where gh\")",
+      "Bash(npx eslint:*)",
+      "Bash(cmd.exe:*)"
     ]
   }
 }
