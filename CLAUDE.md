@@ -100,6 +100,12 @@ POST /api/enrollments    # 수강 신청 제출
 
 ---
 
+## 작업 완료 Slack 알림 (Stop 훅)
+- 에이전트 작업이 완료되면 .claude/scripts/notify-slack.sh 가 자동 실행된다
+- 변경된 파일이 존재할 경우에만 Slack 알림이 전송된다
+- 알림에는 현재 브랜치, 최근 커밋, 변경 파일 목록(최대 10개)이 포함된다
+- SLACK_WEBHOOK_URL 이 .env.local 에 설정되지 않으면 알림 없이 정상 종료된다
+
 ## 자동 타입 체크 훅
 - Write / Edit 를 실행한 직후 tsc --noEmit이 자동 실행된다
 - 타입 오류가 출력되면 다음 작업으로 넘어가기 전에 즉시 수정한다

@@ -25,6 +25,16 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /c/Users/dhals_zn0ga5j/python_seed/LIVEKLASS && bash .claude/scripts/notify-slack.sh"
+          }
+        ]
+      }
     ]
   }
 }
