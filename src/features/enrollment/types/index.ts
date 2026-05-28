@@ -5,8 +5,7 @@ export type {
   CourseStatus,
   EnrollmentFormValues,
   EnrollmentType,
-  GroupFields,
-  IndividualFields,
+  Participant,
   Step,
 } from '@/types/enrollment'
 
@@ -17,13 +16,17 @@ export interface EnrollmentRequest {
     name: string
     email: string
     phone: string
+    motivation?: string
   }
   group?: {
+    name: string
+    email: string
+    phone: string
+    motivation?: string
     organizationName: string
-    managerName: string
-    managerEmail: string
-    managerPhone: string
     headCount: number
+    participants: Array<{ name: string; email: string }>
+    managerPhone: string
   }
 }
 

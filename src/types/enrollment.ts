@@ -20,25 +20,23 @@ export interface CourseListResponse {
   total: number
 }
 
-export interface IndividualFields {
+export interface Participant {
   name: string
   email: string
-  phone: string
-}
-
-export interface GroupFields {
-  organizationName: string
-  managerName: string
-  managerEmail: string
-  managerPhone: string
-  headCount: number
 }
 
 export interface EnrollmentFormValues {
   // Step 1
   courseId: string
-  // Step 2
   enrollmentType: EnrollmentType
-  individual?: IndividualFields
-  group?: GroupFields
+  // Step 2 - common (string | undefined before filled)
+  name: string | undefined
+  email: string | undefined
+  phone: string | undefined
+  motivation: string | undefined
+  // Step 2 - GROUP only (set to undefined when switching to INDIVIDUAL)
+  organizationName: string | undefined
+  headCount: number | undefined
+  participants: Participant[]
+  managerPhone: string | undefined
 }

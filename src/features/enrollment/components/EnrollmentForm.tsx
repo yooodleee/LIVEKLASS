@@ -7,6 +7,7 @@ import type { EnrollmentFormValues, Step } from '@/types/enrollment'
 
 import StepIndicator from './StepIndicator'
 import StepOne from './steps/StepOne'
+import StepTwo from './steps/StepTwo'
 
 export default function EnrollmentForm() {
   const [currentStep, setCurrentStep] = useState<Step>(1)
@@ -15,6 +16,14 @@ export default function EnrollmentForm() {
     mode: 'onBlur',
     defaultValues: {
       courseId: '',
+      name: undefined,
+      email: undefined,
+      phone: undefined,
+      motivation: undefined,
+      organizationName: undefined,
+      headCount: undefined,
+      participants: [],
+      managerPhone: undefined,
     },
   })
 
@@ -31,11 +40,7 @@ export default function EnrollmentForm() {
         <main className="mt-8">
           {currentStep === 1 && <StepOne onNext={() => setCurrentStep(2)} />}
           {currentStep === 2 && (
-            <PlaceholderStep
-              title="신청자 정보"
-              onBack={() => setCurrentStep(1)}
-              onNext={() => setCurrentStep(3)}
-            />
+            <StepTwo onBack={() => setCurrentStep(1)} onNext={() => setCurrentStep(3)} />
           )}
           {currentStep === 3 && (
             <PlaceholderStep title="신청 확인" onBack={() => setCurrentStep(2)} />
@@ -46,15 +51,7 @@ export default function EnrollmentForm() {
   )
 }
 
-function PlaceholderStep({
-  title,
-  onBack,
-  onNext,
-}: {
-  title: string
-  onBack: () => void
-  onNext?: () => void
-}) {
+function PlaceholderStep({ title, onBack }: { title: string; onBack: () => void }) {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-center rounded-xl border-2 border-dashed border-gray-200 py-16">
@@ -68,15 +65,6 @@ function PlaceholderStep({
         >
           ← 이전 단계
         </button>
-        {onNext && (
-          <button
-            type="button"
-            onClick={onNext}
-            className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
-          >
-            다음 단계로 →
-          </button>
-        )}
       </div>
     </div>
   )
