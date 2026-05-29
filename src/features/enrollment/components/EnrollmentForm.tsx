@@ -64,15 +64,14 @@ export default function EnrollmentForm() {
     mode: 'onBlur',
     resolver,
     defaultValues: {
+      // INDIVIDUAL을 기본값으로 지정하여 discriminated union의 초기 분기를 확정
+      enrollmentType: 'INDIVIDUAL',
       courseId: '',
       name: undefined,
       email: undefined,
       phone: undefined,
       motivation: undefined,
-      organizationName: undefined,
-      headCount: undefined,
       participants: [],
-      managerPhone: undefined,
     },
   })
 
@@ -83,7 +82,9 @@ export default function EnrollmentForm() {
   useEffect(() => {
     const draft = loadDraft()
     if (!draft) return
-    methods.reset(draft.formValues)
+    // DraftFormValues(flat partial)를 EnrollmentFormValues(union)로 캐스트하여 reset에 전달
+    // 직렬화/역직렬화 경계로만 사용하므로 안전
+    methods.reset(draft.formValues as unknown as EnrollmentFormValues)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
