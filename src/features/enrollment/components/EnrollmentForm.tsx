@@ -12,6 +12,7 @@ import { isErrorResponse } from '@/types/enrollments'
 import { stepOneSchema } from '../schema/stepOneSchema'
 import { stepTwoSchema } from '../schema/stepTwoSchema'
 import { useEnrollmentMutation } from '../hooks/useEnrollmentMutation'
+import { clearDraft, loadDraft, usePersistForm } from '../hooks/usePersistForm'
 
 // 각 스텝 스키마의 infer 타입이 EnrollmentFormValues보다 좁기 때문에 unknown 경유 캐스트
 // zodResolver는 런타임 검증만 수행하며, values 반환값은 RHF가 폼 상태 갱신에 사용하지 않으므로 안전
@@ -26,7 +27,15 @@ import StepThree from './steps/StepThree'
 import StepTwo from './steps/StepTwo'
 
 export default function EnrollmentForm() {
-  const [currentStep, setCurrentStep] = useState<Step>(1)
+  // localStorage는 브라우저 전용 API이므로 typeof window 가드로 SSR 안전하게 초기화
+  const [currentStep, setCurrentStep] = useState<Step>(() => {
+    if (typeof window === 'undefined') return 1
+    return loadDraft()?.step ?? 1
+  })
+  const [hasDraft, setHasDraft] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return loadDraft() !== null
+  })
   const [returnToConfirm, setReturnToConfirm] = useState(false)
   const [completedData, setCompletedData] = useState<EnrollmentResponse | null>(null)
 
@@ -68,6 +77,17 @@ export default function EnrollmentForm() {
 
   const mutation = useEnrollmentMutation()
 
+  // 마운트 후 폼 값만 draft에서 복구 (step/hasDraft는 lazy 초기화로 처리)
+  // methods.reset()은 React 외부 API 호출이므로 effect에서 실행
+  useEffect(() => {
+    const draft = loadDraft()
+    if (!draft) return
+    methods.reset(draft.formValues)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  usePersistForm(methods, currentStep)
+
   // 수정 링크에서 돌아온 경우 Step 3으로 자동 복귀
   const goToStepForEdit = (step: 1 | 2) => {
     setReturnToConfirm(true)
@@ -91,6 +111,7 @@ export default function EnrollmentForm() {
   const handleSubmit = (request: EnrollmentRequest) => {
     mutation.mutate(request, {
       onSuccess: (data) => {
+        clearDraft()
         setCompletedData(data)
       },
       onError: (error) => {
@@ -106,11 +127,13 @@ export default function EnrollmentForm() {
   }
 
   const handleReset = () => {
+    clearDraft()
     methods.reset()
     mutation.reset()
     setCompletedData(null)
     setCurrentStep(1)
     setReturnToConfirm(false)
+    setHasDraft(false)
   }
 
   // 제출 완료 화면
@@ -130,6 +153,24 @@ export default function EnrollmentForm() {
           <h1 className="text-2xl font-bold text-gray-900">수강 신청</h1>
           <p className="mt-1 text-sm text-gray-500">원하는 강의를 선택하고 신청을 완료하세요.</p>
         </header>
+
+        {hasDraft && (
+          <div className="mb-6 flex items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+            <p className="text-sm text-blue-700">이전에 작성하던 내용을 불러왔습니다.</p>
+            <button
+              type="button"
+              onClick={() => {
+                clearDraft()
+                methods.reset()
+                setCurrentStep(1)
+                setHasDraft(false)
+              }}
+              className="shrink-0 text-xs text-blue-600 underline hover:text-blue-800"
+            >
+              초기화
+            </button>
+          </div>
+        )}
 
         <StepIndicator
           currentStep={currentStep}
