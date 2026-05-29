@@ -99,7 +99,7 @@ export default function StepTwo({ onNext, onBack }: StepTwoProps) {
       {/* 신청 유형 선택 */}
       <section>
         <h2 className="mb-3 text-base font-semibold text-gray-900">신청 유형</h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {(Object.entries(TYPE_LABELS) as [EnrollmentType, { title: string; desc: string }][]).map(
             ([value, { title, desc }]) => (
               <label

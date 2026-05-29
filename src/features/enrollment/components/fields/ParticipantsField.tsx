@@ -57,7 +57,7 @@ export default function ParticipantsField() {
                 <span className="mt-2.5 w-5 shrink-0 text-right text-xs font-medium text-gray-400">
                   {index + 1}.
                 </span>
-                <div className="flex flex-1 gap-2">
+                <div className="flex flex-1 flex-col gap-2 sm:flex-row">
                   <div className="flex flex-1 flex-col gap-1">
                     <input
                       type="text"
