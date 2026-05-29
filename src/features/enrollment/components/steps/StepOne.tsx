@@ -1,12 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useFormContext } from 'react-hook-form'
+import { useFormContext, useWatch } from 'react-hook-form'
 
 import type { Course, CourseCategory, EnrollmentFormValues } from '@/types/enrollment'
 
 import { useCourses } from '../../hooks/useCourses'
-import { stepOneSchema } from '../../schema/stepOneSchema'
 import { getCourseStatus } from '../../utils/courseStatus'
 
 const CATEGORIES: { value: CourseCategory | null; label: string }[] = [
@@ -32,16 +31,15 @@ export default function StepOne({ onNext }: StepOneProps) {
   const { data, isLoading, isError, refetch } = useCourses(selectedCategory)
 
   const {
+    control,
     setValue,
-    setError,
-    clearErrors,
-    watch,
+    trigger,
     register,
     formState: { errors },
   } = useFormContext<EnrollmentFormValues>()
 
-  const selectedCourseId = watch('courseId')
-  const selectedEnrollmentType = watch('enrollmentType')
+  const selectedCourseId = useWatch({ control, name: 'courseId' })
+  const selectedEnrollmentType = useWatch({ control, name: 'enrollmentType' })
 
   const selectedCourse = data?.courses.find((c) => c.id === selectedCourseId)
   const isAlmostFull =
@@ -54,28 +52,11 @@ export default function StepOne({ onNext }: StepOneProps) {
     const status = getCourseStatus(course)
     if (status === 'FULL') return
     setValue('courseId', course.id, { shouldValidate: false })
-    clearErrors('courseId')
   }
 
   const handleNext = async () => {
-    clearErrors(['courseId', 'enrollmentType'])
-
-    const result = stepOneSchema.safeParse({
-      courseId: selectedCourseId,
-      enrollmentType: selectedEnrollmentType,
-    })
-
-    if (!result.success) {
-      result.error.issues.forEach((issue) => {
-        const field = issue.path[0]
-        if (field === 'courseId' || field === 'enrollmentType') {
-          setError(field, { message: issue.message })
-        }
-      })
-      return
-    }
-
-    onNext()
+    const isValid = await trigger(['courseId', 'enrollmentType'])
+    if (isValid) onNext()
   }
 
   return (

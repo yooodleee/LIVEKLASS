@@ -1,13 +1,24 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
+import type { Resolver } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 import type { EnrollmentFormValues, Step } from '@/types/enrollment'
 import type { EnrollmentRequest, EnrollmentResponse } from '@/types/enrollments'
 import { isErrorResponse } from '@/types/enrollments'
 
+import { stepOneSchema } from '../schema/stepOneSchema'
+import { stepTwoSchema } from '../schema/stepTwoSchema'
 import { useEnrollmentMutation } from '../hooks/useEnrollmentMutation'
+
+// 각 스텝 스키마의 infer 타입이 EnrollmentFormValues보다 좁기 때문에 unknown 경유 캐스트
+// zodResolver는 런타임 검증만 수행하며, values 반환값은 RHF가 폼 상태 갱신에 사용하지 않으므로 안전
+const stepResolvers: Partial<Record<1 | 2, Resolver<EnrollmentFormValues>>> = {
+  1: zodResolver(stepOneSchema) as unknown as Resolver<EnrollmentFormValues>,
+  2: zodResolver(stepTwoSchema) as unknown as Resolver<EnrollmentFormValues>,
+}
 
 import StepIndicator from './StepIndicator'
 import StepOne from './steps/StepOne'
@@ -19,8 +30,29 @@ export default function EnrollmentForm() {
   const [returnToConfirm, setReturnToConfirm] = useState(false)
   const [completedData, setCompletedData] = useState<EnrollmentResponse | null>(null)
 
+  // 항상 최신 currentStep을 참조하도록 ref로 관리 (resolver 내부에서 사용)
+  // 검증은 버튼 클릭 시점에만 발생하므로 useEffect 동기화로 충분
+  const currentStepRef = useRef<Step>(1)
+  useEffect(() => {
+    currentStepRef.current = currentStep
+  }, [currentStep])
+
+  const resolver = useCallback<Resolver<EnrollmentFormValues>>(
+    async (...args) => {
+      const step = currentStepRef.current
+      if (step === 1 || step === 2) {
+        const stepResolver = stepResolvers[step]
+        if (stepResolver) return stepResolver(...args)
+      }
+      // Step 3의 agreedToTerms는 로컬 상태로 처리하므로 폼 검증 생략
+      return { values: args[0], errors: {} }
+    },
+    [],
+  )
+
   const methods = useForm<EnrollmentFormValues>({
     mode: 'onBlur',
+    resolver,
     defaultValues: {
       courseId: '',
       name: undefined,

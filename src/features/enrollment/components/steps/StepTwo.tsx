@@ -1,14 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { type FieldPath, useFormContext } from 'react-hook-form'
+import { type FieldPath, useFormContext, useWatch } from 'react-hook-form'
 
 import type { EnrollmentFormValues, EnrollmentType } from '@/types/enrollment'
 
 import MotivationField from '../fields/MotivationField'
 import ParticipantsField from '../fields/ParticipantsField'
 import PhoneField from '../fields/PhoneField'
-import { stepTwoSchema } from '../../schema/stepTwoSchema'
 
 interface StepTwoProps {
   onNext: () => void
@@ -24,18 +23,17 @@ export default function StepTwo({ onNext, onBack }: StepTwoProps) {
   const [pendingType, setPendingType] = useState<EnrollmentType | null>(null)
 
   const {
+    control,
     register,
-    watch,
     setValue,
-    setError,
-    clearErrors,
     setFocus,
     getValues,
+    getFieldState,
     trigger,
     formState: { errors },
   } = useFormContext<EnrollmentFormValues>()
 
-  const enrollmentType = watch('enrollmentType')
+  const enrollmentType = useWatch({ control, name: 'enrollmentType' })
   const isGroup = enrollmentType === 'GROUP'
 
   // enrollmentType이 아직 설정되지 않은 경우 (Step 1을 거치지 않은 경우)
@@ -48,73 +46,40 @@ export default function StepTwo({ onNext, onBack }: StepTwoProps) {
 
   const confirmTypeChange = () => {
     if (!pendingType) return
-    // GROUP → INDIVIDUAL 전환: GROUP 전용 필드 초기화, 공통 필드 유지
+    // NOTE: GROUP → INDIVIDUAL 전환 시 GROUP 전용 필드를 undefined로 초기화하여
+    // 이전 단체 데이터가 제출 payload에 포함되지 않도록 처리
     if (pendingType === 'INDIVIDUAL') {
       setValue('organizationName', undefined)
       setValue('headCount', undefined)
       setValue('managerPhone', undefined)
       setValue('participants', [])
-      clearErrors(['organizationName', 'headCount', 'managerPhone'])
     }
     setValue('enrollmentType', pendingType, { shouldValidate: false })
-    clearErrors()
     setPendingType(null)
   }
 
   const cancelTypeChange = () => setPendingType(null)
 
   const handleNext = async () => {
-    clearErrors()
+    const baseFields: FieldPath<EnrollmentFormValues>[] = ['name', 'email', 'phone', 'motivation']
+    const groupFields: FieldPath<EnrollmentFormValues>[] = isGroup
+      ? [
+          'organizationName',
+          'headCount',
+          'managerPhone',
+          ...getValues('participants').flatMap((_, idx) => [
+            `participants.${idx}.name` as FieldPath<EnrollmentFormValues>,
+            `participants.${idx}.email` as FieldPath<EnrollmentFormValues>,
+          ]),
+        ]
+      : []
 
-    // participants sub-field 검증 (useFieldArray 개별 필드)
-    if (isGroup) {
-      const participants = getValues('participants')
-      const participantPaths = participants.flatMap((_, idx) => [
-        `participants.${idx}.name` as FieldPath<EnrollmentFormValues>,
-        `participants.${idx}.email` as FieldPath<EnrollmentFormValues>,
-      ])
-      if (participantPaths.length > 0) {
-        await trigger(participantPaths)
-      }
-    }
+    const allFields = [...baseFields, ...groupFields]
+    const isValid = await trigger(allFields)
 
-    // Zod 스키마로 현재 스텝 전체 검증
-    const raw = {
-      enrollmentType,
-      name: getValues('name'),
-      email: getValues('email'),
-      phone: getValues('phone'),
-      motivation: getValues('motivation') || undefined,
-      ...(isGroup && {
-        organizationName: getValues('organizationName'),
-        headCount: getValues('headCount'),
-        participants: getValues('participants'),
-        managerPhone: getValues('managerPhone'),
-      }),
-    }
-
-    const result = stepTwoSchema.safeParse(raw)
-
-    if (!result.success) {
-      let firstErrorPath: FieldPath<EnrollmentFormValues> | null = null
-
-      result.error.issues.forEach((issue) => {
-        if (issue.path.length === 0) return
-
-        let fieldPath: FieldPath<EnrollmentFormValues>
-
-        if (issue.path.length === 1) {
-          fieldPath = String(issue.path[0]) as FieldPath<EnrollmentFormValues>
-        } else {
-          // 참가자 배열 중첩 경로: ['participants', index, 'name'|'email']
-          fieldPath = issue.path.map(String).join('.') as FieldPath<EnrollmentFormValues>
-        }
-
-        setError(fieldPath, { message: issue.message })
-        if (!firstErrorPath) firstErrorPath = fieldPath
-      })
-
-      if (firstErrorPath) setFocus(firstErrorPath)
+    if (!isValid) {
+      const firstErrorField = allFields.find((field) => getFieldState(field).error)
+      if (firstErrorField) setFocus(firstErrorField)
       return
     }
 
@@ -177,13 +142,7 @@ export default function StepTwo({ onNext, onBack }: StepTwoProps) {
             id="name"
             type="text"
             placeholder="홍길동"
-            {...register('name', {
-              validate: (value) => {
-                if (!value || value.trim().length < 2) return '이름은 최소 2자 이상 입력해 주세요.'
-                if (value.trim().length > 20) return '이름은 최대 20자까지 입력 가능합니다.'
-                return true
-              },
-            })}
+            {...register('name')}
             className={inputClass(!!errors.name)}
             aria-invalid={!!errors.name}
             aria-describedby={errors.name ? 'name-error' : undefined}
@@ -204,13 +163,7 @@ export default function StepTwo({ onNext, onBack }: StepTwoProps) {
             id="email"
             type="email"
             placeholder="example@email.com"
-            {...register('email', {
-              validate: (value) => {
-                if (!value || value.trim().length < 1) return '이메일을 입력해 주세요.'
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return '올바른 이메일 형식이 아닙니다.'
-                return true
-              },
-            })}
+            {...register('email')}
             className={inputClass(!!errors.email)}
             aria-invalid={!!errors.email}
             aria-describedby={errors.email ? 'email-error' : undefined}
@@ -240,10 +193,7 @@ export default function StepTwo({ onNext, onBack }: StepTwoProps) {
               id="organizationName"
               type="text"
               placeholder="(주)회사명 또는 기관명"
-              {...register('organizationName', {
-                validate: (value) =>
-                  value && value.trim().length > 0 ? true : '단체명을 입력해 주세요.',
-              })}
+              {...register('organizationName')}
               className={inputClass(!!errors.organizationName)}
               aria-invalid={!!errors.organizationName}
               aria-describedby={errors.organizationName ? 'org-error' : undefined}
@@ -267,17 +217,7 @@ export default function StepTwo({ onNext, onBack }: StepTwoProps) {
               min={2}
               max={10}
               placeholder="2"
-              {...register('headCount', {
-                valueAsNumber: true,
-                validate: (value) => {
-                  if (value === undefined || Number.isNaN(value))
-                    return '신청 인원수를 입력해 주세요.'
-                  if (!Number.isInteger(value)) return '신청 인원수는 정수로 입력해 주세요.'
-                  if (value < 2) return '단체 신청은 최소 2명 이상이어야 합니다.'
-                  if (value > 10) return '단체 신청은 최대 10명까지 가능합니다.'
-                  return true
-                },
-              })}
+              {...register('headCount', { valueAsNumber: true })}
               className={inputClass(!!errors.headCount)}
               aria-invalid={!!errors.headCount}
               aria-describedby={errors.headCount ? 'headcount-error' : undefined}
