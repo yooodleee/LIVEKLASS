@@ -43,6 +43,13 @@ export default function StepOne({ onNext }: StepOneProps) {
   const selectedCourseId = watch('courseId')
   const selectedEnrollmentType = watch('enrollmentType')
 
+  const selectedCourse = data?.courses.find((c) => c.id === selectedCourseId)
+  const isAlmostFull =
+    selectedCourse !== undefined && getCourseStatus(selectedCourse) === 'ALMOST_FULL'
+  const remainingSeats = selectedCourse
+    ? selectedCourse.maxCapacity - selectedCourse.currentEnrollment
+    : 0
+
   const handleCourseSelect = (course: Course) => {
     const status = getCourseStatus(course)
     if (status === 'FULL') return
@@ -212,6 +219,17 @@ export default function StepOne({ onNext }: StepOneProps) {
           </p>
         )}
       </section>
+
+      {/* 정원 임박 인라인 경고 */}
+      {isAlmostFull && (
+        <div
+          role="alert"
+          className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700"
+        >
+          선택하신 강의의 잔여석이 얼마 남지 않았습니다. (잔여석: {remainingSeats}석) 빠르게
+          신청을 완료해 주세요.
+        </div>
+      )}
 
       {/* 다음 단계 버튼 */}
       <div className="flex justify-end">
