@@ -43,10 +43,12 @@ const groupSchema = commonSchema.extend({
     .superRefine((participants, ctx) => {
       const emails = participants.map((p) => p.email)
       emails.forEach((email, index) => {
-        if (emails.indexOf(email) !== index) {
+        const firstIndex = emails.indexOf(email)
+        if (firstIndex !== index) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: '이미 입력된 이메일 주소입니다.',
+            // 첫 번째 중복 발생 위치를 명시하여 사용자가 어느 행을 수정해야 하는지 즉시 파악 가능
+            message: `참가자 ${firstIndex + 1}번과 이메일이 중복됩니다.`,
             path: [index, 'email'],
           })
         }
