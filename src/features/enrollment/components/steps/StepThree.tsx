@@ -9,7 +9,6 @@ import type { EnrollmentRequest, EnrollmentResponse } from '@/types/enrollments'
 import { isErrorResponse } from '@/types/enrollments'
 
 import { ENROLLMENT_ERROR_MESSAGES } from '../../constants/errorMessages'
-import { useEnrollmentMutation } from '../../hooks/useEnrollmentMutation'
 import { stepThreeSchema } from '../../schema/stepThreeSchema'
 import { buildEnrollmentRequest } from '../../utils/buildEnrollmentRequest'
 import { formatPhoneDisplay } from '../../utils/formatPhone'
@@ -335,5 +334,3 @@ function Spinner() {
   )
 }
 
-// useEnrollmentMutation을 StepThree 외부에서 사용할 경우를 위한 re-export
-export { useEnrollmentMutation }
