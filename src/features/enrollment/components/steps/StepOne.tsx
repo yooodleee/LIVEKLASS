@@ -148,6 +148,9 @@ export default function StepOne({ onNext }: StepOneProps) {
                         {isFull ? '잔여석 없음' : `잔여 ${remaining}석`}
                       </span>
                     </div>
+                    {isFull && (
+                      <p className="mt-2 text-xs text-red-500">정원이 마감된 강의입니다.</p>
+                    )}
                   </button>
                 </li>
               )
