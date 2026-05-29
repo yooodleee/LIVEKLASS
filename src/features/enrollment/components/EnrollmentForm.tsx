@@ -13,6 +13,7 @@ import { stepOneSchema } from '../schema/stepOneSchema'
 import { stepTwoSchema } from '../schema/stepTwoSchema'
 import { useEnrollmentMutation } from '../hooks/useEnrollmentMutation'
 import { clearDraft, loadDraft, usePersistForm } from '../hooks/usePersistForm'
+import { useNavigationGuard } from '../hooks/useNavigationGuard'
 
 // 각 스텝 스키마의 infer 타입이 EnrollmentFormValues보다 좁기 때문에 unknown 경유 캐스트
 // zodResolver는 런타임 검증만 수행하며, values 반환값은 RHF가 폼 상태 갱신에 사용하지 않으므로 안전
@@ -87,6 +88,9 @@ export default function EnrollmentForm() {
   }, [])
 
   usePersistForm(methods, currentStep)
+
+  // 폼에 입력값이 있고 제출 완료 전인 경우에만 이탈 방지 활성화
+  useNavigationGuard(methods.formState.isDirty && completedData === null)
 
   // 수정 링크에서 돌아온 경우 Step 3으로 자동 복귀
   const goToStepForEdit = (step: 1 | 2) => {
