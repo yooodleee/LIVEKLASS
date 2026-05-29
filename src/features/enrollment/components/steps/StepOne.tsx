@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 
 import type { Course, CourseCategory, EnrollmentFormValues } from '@/types/enrollment'
@@ -35,8 +35,14 @@ export default function StepOne({ onNext }: StepOneProps) {
     setValue,
     trigger,
     register,
+    setFocus,
+    getFieldState,
     formState: { errors },
   } = useFormContext<EnrollmentFormValues>()
+
+  // courseId는 register 없이 setValue로만 관리되므로 setFocus 대신 ref 스크롤로 포커스 처리
+  const courseListRef = useRef<HTMLElement>(null)
+  const enrollmentTypeRef = useRef<HTMLElement>(null)
 
   const selectedCourseId = useWatch({ control, name: 'courseId' })
   const selectedEnrollmentType = useWatch({ control, name: 'enrollmentType' })
@@ -56,7 +62,18 @@ export default function StepOne({ onNext }: StepOneProps) {
 
   const handleNext = async () => {
     const isValid = await trigger(['courseId', 'enrollmentType'])
-    if (isValid) onNext()
+    if (isValid) {
+      onNext()
+      return
+    }
+    // trigger 완료 후 getFieldState로 에러 필드를 확인하여 해당 섹션으로 이동
+    if (getFieldState('courseId').error) {
+      courseListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    } else if (getFieldState('enrollmentType').error) {
+      // enrollmentType은 register된 라디오 입력이므로 setFocus 사용
+      setFocus('enrollmentType')
+      enrollmentTypeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
   }
 
   return (
@@ -88,7 +105,7 @@ export default function StepOne({ onNext }: StepOneProps) {
       </section>
 
       {/* 강의 목록 */}
-      <section aria-labelledby="course-list-heading">
+      <section ref={courseListRef} aria-labelledby="course-list-heading">
         <h2 id="course-list-heading" className="mb-3 text-base font-semibold text-gray-900">
           강의 선택
         </h2>
@@ -166,7 +183,7 @@ export default function StepOne({ onNext }: StepOneProps) {
       </section>
 
       {/* 신청 유형 */}
-      <section aria-labelledby="enrollment-type-heading">
+      <section ref={enrollmentTypeRef} aria-labelledby="enrollment-type-heading">
         <h2 id="enrollment-type-heading" className="mb-3 text-base font-semibold text-gray-900">
           신청 유형
         </h2>
